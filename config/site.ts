@@ -4,11 +4,11 @@ export const siteConfig = {
   name: "OCR Conversion - PEA",
   description: "Proudly Presented by PEACE",
   navItems: [    
+    /*
     {
       label: "หน้าหลัก",
       href: "/",
     },
-    /*
     {
       label: "Docs",
       href: "/docs",
@@ -62,10 +62,6 @@ export const siteConfig = {
     },
   ],
   links: {
-    github: "https://github.com/nextui-org/nextui",
-    twitter: "https://twitter.com/getnextui",
-    docs: "https://nextui.org",
-    discord: "https://discord.gg/9b6yyZKmH4",
-    sponsor: "https://patreon.com/jrgarciadev",
+    github: "https://github.com/kawaiipeace/peace-ocr-pdf",
   },
 };
