@@ -1,5 +1,15 @@
 export type SiteConfig = typeof siteConfig;
 
+export interface NavMenuItems {
+  href: string;
+  label: string;
+}
+
+export interface NavItems {
+  href: string;
+  label: string;
+}
+
 export const siteConfig = {
   name: "OCR Conversion - PEA",
   description: "Proudly Presented by PEACE",
@@ -26,7 +36,7 @@ export const siteConfig = {
       href: "/about",
     },
     */
-  ],
+  ] as NavItems[],
   navMenuItems: [
     {
       label: "Profile",
@@ -60,7 +70,7 @@ export const siteConfig = {
       label: "Logout",
       href: "/logout",
     },
-  ],
+  ] as NavMenuItems[],
   links: {
     github: "https://github.com/kawaiipeace/peace-ocr-pdf",
   },
