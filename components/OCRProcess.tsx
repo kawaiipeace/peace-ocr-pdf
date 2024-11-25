@@ -5,7 +5,8 @@ import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs'; // PDF parsing
 import Tesseract from 'tesseract.js'; // OCR library
 import PizZip from 'pizzip'; // Pizzip for creating DOCX
 import Docxtemplater from 'docxtemplater'; // Docxtemplater for generating DOCX
-import {Pagination, PaginationItem, PaginationCursor} from "@nextui-org/pagination";
+import { Pagination, PaginationItem, PaginationCursor } from "@nextui-org/pagination";
+import { Progress } from "@nextui-org/progress";
 
 export default function Home() {
   const [ocrResults, setOcrResults] = useState<string[]>([]); // Store OCR results for each page
@@ -199,51 +200,47 @@ export default function Home() {
 
   return (
     <div>
-      <h1>OCR PDF or Image with Thai Language Support</h1>
+      <h1>ระบบแปลงภาพหรือ PDF เป็นข้อความ</h1>
       <input type="file" accept=".pdf,image/*" onChange={handleFileChange} />
 
       {loading && (
-        <div style={{ marginTop: '20px' }}>
-          <p>Loading and performing OCR...</p>
-          <div style={{ width: '100%', backgroundColor: '#e0e0e0', borderRadius: '10px' }}>
-            <div
-              style={{
-                height: '20px',
-                width: `${overallProgress}%`,
-                backgroundColor: '#4caf50',
-                borderRadius: '10px',
-                transition: 'width 0.5s ease-out',
-              }}
-            />
-          </div>
-          <p style={{ textAlign: 'center' }}>{Math.round(overallProgress)}%</p>
+        <div className="mt-2">
+          <p>อยู่ในกระบวนการ OCR กรุณารอสักครู่...</p>
+          <Progress
+            aria-label="Loading..."
+            size="md"
+            value={Math.round(overallProgress)}
+            color="secondary"
+            showValueLabel={true}
+            className="max-w-lg"
+          />
         </div>
       )}
 
       {!loading && ocrResults.length > 0 && (
         <div>
           {fileType === 'pdf' && (
-            <div>
+            <div className="mt-3">
               {/* Pagination Controls for PDF */}
-              <Pagination 
+              <Pagination
                 loop
-                showControls 
-                color="secondary" 
-                total={pages.length} 
+                showControls
+                color="secondary"
+                total={pages.length}
                 initialPage={1}
                 page={currentPage}
                 onChange={setCurrentPage}
               />
 
               {/* Display OCR Result and Image for the current page */}
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <div style={{ marginBottom: '20px' }}>
-                  <h2>Page {currentPage} OCR Result:</h2>
+              <div className="flex columns-2 gap-2">
+                <div className="mt-3">
+                  <h2>เนื้อหาที่ถูกแปลงหน้าที่ {currentPage}:</h2>
                   <pre>{ocrResults[currentPage - 1]}</pre>
                 </div>
 
                 <div>
-                  <h3>Page {currentPage} Preview:</h3>
+                  <h2>เอกสารจริงหน้าที่ {currentPage}:</h2>
                   <img src={pages[currentPage - 1].toDataURL()} alt={`Page ${currentPage}`} />
                 </div>
               </div>
