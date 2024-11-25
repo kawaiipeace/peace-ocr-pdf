@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react';
-import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf'; // PDF parsing
+import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs'; // PDF parsing
 import Tesseract from 'tesseract.js'; // OCR library
 import PizZip from 'pizzip'; // Pizzip for creating DOCX
 import Docxtemplater from 'docxtemplater'; // Docxtemplater for generating DOCX
