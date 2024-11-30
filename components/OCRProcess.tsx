@@ -76,6 +76,7 @@ export default function Home() {
               setCurrentPageProgress(m.progress * 100); // Update progress for the current page
             }
           },
+          // langPath: '/custom_model',
         }
       );
 
