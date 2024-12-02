@@ -69,14 +69,14 @@ export default function Home() {
       // Perform OCR on each page using Tesseract.js
       const result = await Tesseract.recognize(
         canvas,
-        'tha+eng', // Thai and English language support
+        'tha_best+eng_best', // Thai and English language support
         {
           logger: (m) => {
             if (m.status === 'recognizing text') {
               setCurrentPageProgress(m.progress * 100); // Update progress for the current page
             }
           },
-          // langPath: '/custom_model',
+          langPath: '/custom_models',
         }
       );
 
