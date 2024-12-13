@@ -101,7 +101,7 @@ export default function Home() {
   const ocrImage = async (file: File): Promise<void> => {
     const ocrResult = await Tesseract.recognize(
       file,
-      'tha+eng', // Thai and English language support
+      'tha_best+eng_best', // Thai and English language support
       {
         logger: (m) => {
           if (m.status === 'recognizing text') {
@@ -109,6 +109,7 @@ export default function Home() {
             setCurrentPageProgress(m.progress * 100); // Update current page progress
           }
         },
+        langPath: '/custom_models',
       }
     );
 
