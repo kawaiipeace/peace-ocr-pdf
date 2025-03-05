@@ -74,7 +74,7 @@ async def ocr(pdf: UploadFile = File(...)):
         output = model.generate(
             **inputs,
             temperature=0.8,
-            max_new_tokens=50,
+            # max_new_tokens=50,
             num_return_sequences=1,
             do_sample=True,
         )
