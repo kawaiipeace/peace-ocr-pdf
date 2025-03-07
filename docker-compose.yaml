@@ -1,0 +1,33 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.gpu
+    container_name: olmocr-backend
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "${BACKEND_PORT}:8000"
+    networks:
+      olmocr-network:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: olmocr-frontend
+    depends_on:
+      - backend
+    restart: always
+    env_file:
+      - .env
+    environment:
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+    ports:
+      - "${FRONTEND_PORT}:3000"
+    networks:
+      olmocr-network:
+
+networks:
+  pms360-network:
+    driver: bridge
