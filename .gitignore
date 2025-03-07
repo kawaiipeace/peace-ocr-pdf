@@ -1,0 +1,28 @@
+# Virtual environments
+venv/
+.env/
+env/
+.venv/
+
+# Log files
+*.log
+*.out
+*.err
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# IDE/editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Docker
+docker-compose.override.yml
+
+# Environment variables and secrets
+.env
+*.env
+config/settings_local.py
