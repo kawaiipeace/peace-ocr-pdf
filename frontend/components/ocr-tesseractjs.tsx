@@ -14,6 +14,9 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { Progress } from "@/components/ui/progress";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 
 export default function Home() {
   const [ocrResults, setOcrResults] = useState<string[]>([]); // Store OCR results for each page
@@ -209,18 +212,17 @@ export default function Home() {
 
   return (
     <div>
-      <h1>ระบบแปลงภาพหรือ PDF เป็นข้อความ</h1>
-      <input type="file" accept=".pdf,image/*" onChange={handleFileChange} />
+      <div className="grid w-full max-w-sm items-center gap-1.5">
+        <Label htmlFor="uploadfile">ระบบแปลงภาพหรือ PDF เป็นข้อความ</Label>
+        <Input id="uploadfile" type="file" accept=".pdf,image/*" onChange={handleFileChange} />
+      </div>
 
       {loading && (
         <div className="mt-2">
           <p>อยู่ในกระบวนการ OCR กรุณารอสักครู่...</p>
           <Progress
-            //aria-label="Loading..."
-            //size="md"
             value={Math.round(overallProgress)}
             color="secondary"
-            //showValueLabel={true}
             className="max-w-lg"
           />
         </div>
@@ -230,35 +232,41 @@ export default function Home() {
         <div>
           {fileType === 'pdf' && (
             <div className="mt-3">
+              {/* DO PAGINATION HERE */}
               <Pagination>
                 <PaginationContent>
                   <PaginationItem>
-                    <PaginationPrevious href="#" />
+                    <PaginationPrevious
+                      href="#"
+                      onClick={() => changePage(currentPage - 1)}
+                    />
                   </PaginationItem>
+                  {[...Array(pages.length)].map((_, index) => (
+                    <PaginationItem key={index}>
+                      <PaginationLink
+                        href="#"
+                        isActive={index + 1 === currentPage}
+                        onClick={() => changePage(index + 1)}
+                      >
+                        {index + 1}
+                      </PaginationLink>
+                    </PaginationItem>
+                  ))}
+                  {/* Ellipsis (optional, based on your need) */}
+                  {pages.length > 3 && (
+                    <PaginationItem>
+                      <PaginationEllipsis />
+                    </PaginationItem>
+                  )}
                   <PaginationItem>
-                    <PaginationLink href="#">1</PaginationLink>
-                  </PaginationItem>
-                  <PaginationItem>
-                    <PaginationEllipsis />
-                  </PaginationItem>
-                  <PaginationItem>
-                    <PaginationNext href="#" />
+                    <PaginationNext
+                      href="#"
+                      onClick={() => changePage(currentPage + 1)}
+                    />
                   </PaginationItem>
                 </PaginationContent>
               </Pagination>
 
-              {/* Pagination Controls for PDF 
-
-              <Pagination
-                loop
-                showControls
-                color="secondary"
-                total={pages.length}
-                initialPage={1}
-                page={currentPage}
-                onChange={setCurrentPage}
-              />
-              */}
               {/* Display OCR Result and Image for the current page */}
               <div className="flex columns-2 gap-2">
                 <div className="mt-3">
