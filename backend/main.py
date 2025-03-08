@@ -52,7 +52,7 @@ async def ocr(pdf: UploadFile = File(...)):
                 "role": "user",
                 "content": [
                     {"type": "text", "text": prompt},
-                    {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{image_base64}"}},
+                    {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{image_base64}"}}  # Using base64 image data
                 ],
             }
         ]
@@ -74,17 +74,24 @@ async def ocr(pdf: UploadFile = File(...)):
         output = model.generate(
             **inputs,
             temperature=0.8,
-            # max_new_tokens=50,
-            num_return_sequences=1,
             do_sample=True,
+            num_return_sequences=1,  # Ensure we get just one response
+            max_new_tokens=2048,  # You can adjust this depending on the length of the expected output
         )
 
-        # Decode the output
+        # Decode the output completely
         prompt_length = inputs["input_ids"].shape[1]
         new_tokens = output[:, prompt_length:]
+        
+        # Decoding all the tokens into text
         text_output = processor.tokenizer.batch_decode(new_tokens, skip_special_tokens=True)
 
-        return JSONResponse(content={"text": text_output})
+        # Print the entire decoded text to check its completeness
+        full_text = " ".join(text_output)  # Combine all the pieces into one string if necessary
+
+        print(full_text)  # Debugging line to inspect the full output
+
+        return JSONResponse(content={"text": full_text})
 
     except Exception as e:
         # Return a friendly error message
