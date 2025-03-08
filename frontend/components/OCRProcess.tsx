@@ -4,9 +4,16 @@ import { useState, useEffect } from 'react';
 import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs'; // PDF parsing
 import Tesseract from 'tesseract.js'; // OCR library
 import PizZip from 'pizzip'; // Pizzip for creating DOCX
-import Docxtemplater from 'docxtemplater'; // Docxtemplater for generating DOCX
-import { Pagination, PaginationItem, PaginationCursor } from "@nextui-org/pagination";
-import { Progress } from "@nextui-org/progress";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import { Progress } from "@/components/ui/progress";
 
 export default function Home() {
   const [ocrResults, setOcrResults] = useState<string[]>([]); // Store OCR results for each page
@@ -209,11 +216,11 @@ export default function Home() {
         <div className="mt-2">
           <p>อยู่ในกระบวนการ OCR กรุณารอสักครู่...</p>
           <Progress
-            aria-label="Loading..."
-            size="md"
+            //aria-label="Loading..."
+            //size="md"
             value={Math.round(overallProgress)}
             color="secondary"
-            showValueLabel={true}
+            //showValueLabel={true}
             className="max-w-lg"
           />
         </div>
@@ -223,7 +230,25 @@ export default function Home() {
         <div>
           {fileType === 'pdf' && (
             <div className="mt-3">
-              {/* Pagination Controls for PDF */}
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious href="#" />
+                  </PaginationItem>
+                  <PaginationItem>
+                    <PaginationLink href="#">1</PaginationLink>
+                  </PaginationItem>
+                  <PaginationItem>
+                    <PaginationEllipsis />
+                  </PaginationItem>
+                  <PaginationItem>
+                    <PaginationNext href="#" />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+
+              {/* Pagination Controls for PDF 
+
               <Pagination
                 loop
                 showControls
@@ -233,7 +258,7 @@ export default function Home() {
                 page={currentPage}
                 onChange={setCurrentPage}
               />
-
+              */}
               {/* Display OCR Result and Image for the current page */}
               <div className="flex columns-2 gap-2">
                 <div className="mt-3">
