@@ -6,3 +6,4 @@ pdf2image
 Pillow
 python-multipart
 olmocr
+python-dotenv
