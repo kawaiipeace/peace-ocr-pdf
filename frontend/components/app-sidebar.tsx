@@ -25,12 +25,13 @@ const data = {
       url: "#",
       items: [
         {
-          title: "ระบบ OCR จาก Browser",
+          title: "OCR - Type I",
           url: "./tesseractjs",
         },
         {
-          title: "ระบบ OCR จาก Server",
+          title: "OCR - Type II",
           url: "./olmocr",
+          isActive: false,
         },
       ],
     },

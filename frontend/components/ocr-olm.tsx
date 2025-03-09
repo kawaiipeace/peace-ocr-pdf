@@ -1,175 +1,184 @@
 "use client";
 
-import { useState, ChangeEvent } from "react";
+import { useState, ChangeEvent, useEffect } from "react";
 import axios from "axios";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Accordion, AccordionItem } from "@/components/ui/accordion";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
-// Define types for state variables
-interface OcrResult {
-    natural_text: string; // OCR text
-    primary_language: string;
-    is_rotation_valid: boolean;
-    rotation_correction: number;
-    is_table: boolean;
-    is_diagram: boolean;
-    //text: string[] | string; // Allow both array or string
-}
+import { Document, Page, pdfjs } from "react-pdf"; // PDF rendering
+import "react-pdf/dist/esm/Page/AnnotationLayer.css";
+import "react-pdf/dist/esm/Page/TextLayer.css";
+import { saveAs } from "file-saver"; // File download
+import { Packer, Document as DocxDocument, Paragraph } from "docx"; // DOCX export
 
-const markdownTableToHtml = (markdown: string) => {
-    // Simple conversion for markdown tables to HTML tables
-    const tableRegex = /\|([^\|]+)\|/g;
-    const rows = markdown.split("\n").map((line) => {
-        const matches = line.match(tableRegex);
-        if (matches) {
-            const row = matches.map((match) => `<td>${match.slice(1, -1)}</td>`).join("");
-            return `<tr>${row}</tr>`;
-        }
-        return "";
-    });
-
-    return `<table border="1">${rows.join("")}</table>`;
-};
-
-const formatNaturalText = (text: string) => {
-    // Split the text into paragraphs based on double line breaks
-    const paragraphs = text.split("\n\n").map((para, idx) => {
-        // Check if this paragraph contains a markdown table
-        if (para.includes("|")) {
-            // If it contains a table, convert it
-            return markdownTableToHtml(para);
-        }
-        // Otherwise, return as plain text
-        return `<p>${para}</p>`;
-    });
-
-    return paragraphs.join("");
-};
+pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.mjs`;
 
 export default function Home() {
-    // State for PDF file, OCR result, and loading state
-    const [pdf, setPdf] = useState<File | null>(null);
-    const [ocrResult, setOcrResult] = useState<OcrResult | null>(null);
-    const [loading, setLoading] = useState<boolean>(false);
-    const [isAccordionOpen, setAccordionOpen] = useState<boolean>(false); // To toggle the accordion
+  const [file, setFile] = useState<File | null>(null);
+  const [ocrResult, setOcrResult] = useState<any>(null);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [pageNumber, setPageNumber] = useState<number>(1);
+  const [numPages, setNumPages] = useState<number | null>(null);
 
-    // Handle file input change
-    const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0]; // Get the first selected file
-        if (file) {
-            setPdf(file);
-        }
-    };
+  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = event.target.files?.[0];
+    if (selectedFile) {
+      setFile(selectedFile);
+      setOcrResult(null);
+      setPageNumber(1);
+    }
+  };
 
-    // Handle file submission to backend
-    const handleSubmit = async () => {
-        if (!pdf) return;
+  const handleSubmit = async () => {
+    if (!file) return;
 
-        setLoading(true);
+    setLoading(true);
+    const formData = new FormData();
+    formData.append("file", file);
 
-        // Create FormData to send the file to the backend
-        const formData = new FormData();
-        formData.append("pdf", pdf);
+    try {
+      const response = await axios.post("http://127.0.0.1:8000/ocr", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
 
-        try {
-            // Send the request to the FastAPI backend
-            const response = await axios.post(
-                "http://127.0.0.1:8000/ocr", // Backend URL
-                formData,
-                {
-                    headers: {
-                        "Content-Type": "multipart/form-data",
-                    },
-                }
-            );
+      const parsedData = response.data;
+      console.log("Parsed OCR Result:", parsedData);
+      setOcrResult(parsedData);
+    } catch (error) {
+      console.error("Error uploading file:", error);
+      setOcrResult({ error: "Error occurred during OCR processing." });
+    } finally {
+      setLoading(false);
+    }
+  };
 
-            if (response.data.natural_text) {
-                // Include the whole OCR result, not just the text
-                setOcrResult(response.data);
-            } else {
-                setOcrResult({
-                    natural_text: "Unexpected response format.",
-                    primary_language: "",
-                    is_rotation_valid: false,
-                    rotation_correction: 0,
-                    is_table: false,
-                    is_diagram: false,
-                });
-            }
-        } catch (error) {
-            console.error("Error uploading PDF:", error);
-            setOcrResult({
-                natural_text: "Error occurred during OCR processing.",
-                primary_language: "",
-                is_rotation_valid: false,
-                rotation_correction: 0,
-                is_table: false,
-                is_diagram: false,
-            });
-        } finally {
-            setLoading(false);
-        }
-    };
+  const handleDocxExport = async () => {
+    if (!ocrResult?.natural_text) return;
 
-    return (
-        <div>
-            <div className="grid w-full max-w-sm items-center gap-1.5">
-                <Label htmlFor="uploadfile">ระบบแปลงภาพหรือ PDF เป็นข้อความ</Label>
-                <Input id="uploadfile" type="file" accept=".pdf,image/*" onChange={handleFileChange} />
-            </div>
+    const doc = new DocxDocument({
+      sections: [
+        {
+          properties: {},
+          children: ocrResult.natural_text
+            .split("\n")
+            .map((line: string) => new Paragraph(line)),
+        },
+      ],
+    });
 
-            {/* Button to trigger OCR process */}
-            <Button onClick={handleSubmit} disabled={loading}>
-                {loading ? "Processing..." : "Upload and Process"}
-            </Button>
+    const blob = await Packer.toBlob(doc);
+    saveAs(blob, "ocr-result.docx");
+  };
 
-            {/* Display OCR result */}
-            {ocrResult && (
-                <div>
-                    <h2>OCR Result</h2>
+  const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
+    setNumPages(numPages);
+  };
 
-                <div>
-                    {/* Check if text is an array and join it, otherwise display the text directly 
-                    <pre>{Array.isArray(ocrResult.text) ? ocrResult.text.join("\n") : ocrResult.text}</pre>
-                    */}
-                </div>
+  const goToPrevPage = () => setPageNumber((prev) => Math.max(prev - 1, 1));
+  const goToNextPage = () => setPageNumber((prev) => Math.min(prev + 1, numPages || 1));
 
-                    {/* Display the formatted natural text */}
-                    <div dangerouslySetInnerHTML={{ __html: formatNaturalText(ocrResult.natural_text) }} />
+  return (
+    <div className="max-w-6xl mx-auto p-4">
+      {/* Upload Section */}
+      <div className="grid w-full max-w-sm items-center gap-2">
+        <Label htmlFor="uploadfile">ระบบแปลงภาพหรือ PDF เป็นข้อความ</Label>
+        <Input id="uploadfile" type="file" accept=".pdf,image/*" onChange={handleFileChange} />
+      </div>
 
-                    {/* Accordion for additional OCR result details */}
-                    <div>
-                        <button
-                            style={{
-                                marginTop: "10px",
-                                padding: "10px",
-                                backgroundColor: "#007BFF",
-                                color: "white",
-                                border: "none",
-                                borderRadius: "4px",
-                                cursor: "pointer",
-                            }}
-                            onClick={() => setAccordionOpen(!isAccordionOpen)}
-                        >
-                            {isAccordionOpen ? "Collapse Details" : "Expand Details"}
-                        </button>
+      {/* Upload Button */}
+      <Button onClick={handleSubmit} disabled={loading || !file} className="mt-4">
+        {loading ? "กำลังถอดข้อความ กรุณารออีกนานอยู่..." : "อัปโหลด"}
+      </Button>
 
-                        {isAccordionOpen && (
-                            <div style={{ marginTop: "15px", padding: "15px", border: "1px solid #ccc", borderRadius: "4px" }}>
-                                <h3>Additional OCR Information</h3>
-                                <ul>
-                                    <li><strong>Primary Language:</strong> {ocrResult.primary_language}</li>
-                                    <li><strong>Is Rotation Valid:</strong> {ocrResult.is_rotation_valid ? "Yes" : "No"}</li>
-                                    <li><strong>Rotation Correction:</strong> {ocrResult.rotation_correction}</li>
-                                    <li><strong>Is Table:</strong> {ocrResult.is_table ? "Yes" : "No"}</li>
-                                    <li><strong>Is Diagram:</strong> {ocrResult.is_diagram ? "Yes" : "No"}</li>
-                                </ul>
-                            </div>
-                        )}
+      {/* Loading Skeleton */}
+      {loading && <Skeleton className="h-24 mt-4" />}
+
+      {/* Display Content */}
+      {file && !loading && (
+        <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Original File Preview */}
+          <Card>
+            <CardHeader>
+              <CardTitle>เอกสารต้นฉบับ</CardTitle>
+            </CardHeader>
+            <CardContent className="flex justify-center">
+              {file.type === "application/pdf" ? (
+                <div className="flex flex-col items-center">
+                  <Document
+                    file={file}
+                    onLoadSuccess={onDocumentLoadSuccess}
+                    loading={<Skeleton className="h-96 w-full" />}
+                  >
+                    <Page pageNumber={pageNumber} width={400} renderTextLayer={false} />
+                  </Document>
+                  {numPages && (
+                    <div className="flex items-center gap-2 mt-2">
+                      <Button size="sm" onClick={goToPrevPage} disabled={pageNumber <= 1}>
+                        หน้า {pageNumber - 1}
+                      </Button>
+                      <span>
+                        หน้า {pageNumber} / {numPages}
+                      </span>
+                      <Button size="sm" onClick={goToNextPage} disabled={pageNumber >= numPages}>
+                        หน้า {pageNumber + 1}
+                      </Button>
                     </div>
+                  )}
                 </div>
-            )}
+              ) : (
+                <img src={URL.createObjectURL(file)} alt="uploaded" className="w-full max-h-[600px]" />
+              )}
+            </CardContent>
+          </Card>
+
+          {/* OCR Result */}
+          {ocrResult && (
+            <Card>
+              <CardHeader className="flex justify-between items-center">
+                <CardTitle>ข้อความที่ถอดออกมาได้</CardTitle>
+                <Button size="sm" variant="outline" onClick={handleDocxExport}>
+                  ดาวน์โหลด Word
+                </Button>
+              </CardHeader>
+              <CardContent>
+                <div className="prose max-w-full">
+                  {ocrResult.natural_text ? (
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                      {ocrResult.natural_text}
+                    </ReactMarkdown>
+                  ) : (
+                    <p className="text-red-500">ไม่พบข้อมูลการถอดข้อความ</p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
-    );
+      )}
+
+      {/* Display Additional Metadata in Accordion */}
+      {ocrResult && (
+        <Accordion type="single" collapsible className="mt-8">
+          <AccordionItem value="additional-info">
+            <details className="border p-4 rounded-md">
+              <summary className="cursor-pointer font-semibold">ข้อมูลเพิ่มเติม</summary>
+              <div className="mt-2 p-2 rounded">
+                <p><strong>ภาษา:</strong> {ocrResult.primary_language || "ไม่ทราบภาษา"}</p>
+                <p><strong>เอกสารถูกหมุนหรือไม่:</strong> {ocrResult.is_rotation_valid ? "ใช่" : "ไม่"}</p>
+                <p><strong>องศาการหมุนที่ต้องแก้ไข:</strong> {ocrResult.rotation_correction || 0}°</p>
+                <p><strong>เป็นตารางหรือไม่:</strong> {ocrResult.is_table ? "ใช่" : "ไม่"}</p>
+                <p><strong>เป็นไดอะแกรมหรือไม่:</strong> {ocrResult.is_diagram ? "ใช่" : "ไม่"}</p>
+              </div>
+            </details>
+          </AccordionItem>
+        </Accordion>
+      )}
+    </div>
+  );
 }
