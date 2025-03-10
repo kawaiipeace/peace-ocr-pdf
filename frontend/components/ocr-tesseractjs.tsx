@@ -64,7 +64,7 @@ export default function Home() {
 
   // Load PDF and extract pages as images
   const loadPdf = async (file: File): Promise<void> => {
-    let uri: string = URL.createObjectURL(file);
+    const uri: string = URL.createObjectURL(file);
     const pdf = await pdfjsLib.getDocument({ url: uri }).promise;
 
     const totalPages = pdf.numPages;
