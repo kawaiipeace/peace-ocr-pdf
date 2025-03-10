@@ -29,5 +29,5 @@ services:
       olmocr-network:
 
 networks:
-  pms360-network:
+  olmocr-network:
     driver: bridge
