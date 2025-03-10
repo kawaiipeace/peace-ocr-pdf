@@ -22,7 +22,7 @@ services:
     env_file:
       - .env
     environment:
-      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+      NEXT_PUBLIC_BACKEND_URL: ${NEXT_PUBLIC_BACKEND_URL}
     ports:
       - "${FRONTEND_PORT}:3000"
     networks:
